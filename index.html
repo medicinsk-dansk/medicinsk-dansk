@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Medicinsk Dansk</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 15px; }
+        .farsi { font-family: 'Vazirmatn', 'Tahoma', sans-serif; direction: rtl; text-align: right; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); text-align: center; }
+        h1 { color: #2C5F7C; font-size: 2em; margin-bottom: 8px; }
+        .subtitle { color: #E85D75; font-size: 1em; margin-bottom: 5px; }
+        .subtitle-fa { color: #E85D75; font-size: 1.3em; margin-bottom: 15px; }
+        .badge { display: inline-block; background: #4CAF50; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9em; font-weight: bold; margin: 3px; }
+        .scenarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); cursor: pointer; transition: all 0.3s; }
+        .card:active { transform: scale(0.98); }
+        .card-id { background: #f0f0f0; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; color: #666; display: inline-block; margin-bottom: 8px; }
+        .card-title { font-size: 1.1em; color: #2C5F7C; font-weight: bold; margin-bottom: 5px; }
+        .card-title-fa { font-size: 1em; color: #E85D75; margin-bottom: 8px; }
+        .card-duration { font-size: 12px; color: #999; margin-top: 8px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-content { background: white; margin: 20px; border-radius: 20px; max-width: 800px; margin: 20px auto; }
+        .modal-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 25px; border-radius: 20px 20px 0 0; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; font-size: 24px; cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .dialogue-turn { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea; }
+        .speaker { font-weight: bold; color: #2C5F7C; text-transform: uppercase; font-size: 11px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .play-btn { background: #667eea; color: white; border: none; padding: 6px 12px; border-radius: 15px; font-size: 11px; cursor: pointer; }
+        .play-btn:active { background: #5568d3; }
+        .play-btn.playing { background: #4CAF50; }
+        .text-dk { font-size: 15px; line-height: 1.7; color: #333; margin-bottom: 10px; }
+        .text-fa { font-size: 16px; line-height: 1.9; color: #E85D75; padding: 8px; background: white; border-radius: 8px; margin-bottom: 5px; }
+        .text-transliteration { font-size: 13px; color: #999; font-style: italic; }
+        .section-title { font-size: 1.2em; color: #2C5F7C; margin: 25px 0 12px; font-weight: bold; }
+        .vocab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .vocab-item { padding: 15px; background: #FFF8F0; border-radius: 10px; }
+        .vocab-word { font-weight: bold; color: #2C5F7C; margin-bottom: 8px; }
+        .vocab-meaning-fa { color: #E85D75; font-size: 16px; padding: 5px; background: white; border-radius: 5px; }
+        .note-box { background: #E8F5E9; padding: 15px; border-radius: 12px; margin-top: 15px; }
+        @media (max-width: 768px) { .scenarios { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medicinsk Dansk</h1>
+            <div class="subtitle">10 Komplette Scenarier</div>
+            <div class="subtitle-fa farsi">۱۰ سناریو کامل</div>
+            <div class="badge">Med professionel dansk lyd 🔊</div>
+            <div class="badge">فارسی واقعی</div>
+        </div>
+
+        <div class="scenarios" id="scenarios"></div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal()">×</button>
+                <h2 id="modalTitle"></h2>
+                <div class="farsi" id="modalTitleFa" style="font-size: 1.1em; opacity: 0.9; margin-top: 5px;"></div>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const scenarios = [
+            {
+                id: "B001",
+                title: "Første møde med patient",
+                titleFa: "اولین ملاقات با بیمار",
+                duration: "~2 min",
+                dialogue: [
+                    { speaker: "Sygeplejerske", dk: "Godmorgen! Mit navn er Maryam.", fa: "صبح بخیر! اسم من مریم است.", trans: "sobh bekheyr! esm-e man Maryam ast" },
+                    { speaker: "Patient", dk: "Godmorgen.", fa: "صبح بخیر.", trans: "sobh bekheyr" },
+                    { speaker: "Sygeplejerske", dk: "Jeg er sygeplejerske her på afdelingen.", fa: "من پرستار این بخش هستم.", trans: "man parastār-e in bakhsh hastam" },
+                    { speaker: "Patient", dk: "Okay. Jeg hedder Henrik.", fa: "باشه. من هنریک هستم.", trans: "bāshe. man Henrik hastam" },
+                    { speaker: "Sygeplejerske", dk: "Velkommen til afdelingen, Henrik.", fa: "خوش آمدید به بخش، هنریک.", trans: "khosh āmadid be bakhsh, Henrik" },
+                    { speaker: "Patient", dk: "Tak skal du have.", fa: "ممنون از شما.", trans: "mamnun az shomā" },
+                    { speaker: "Sygeplejerske", dk: "Hvordan har du det i dag?", fa: "امروز حالتان چطور است؟", trans: "emruz hāletān chetor ast?" },
+                    { speaker: "Patient", dk: "Jeg har det okay, tak. Men jeg er lidt nervøs.", fa: "حالم خوب است، ممنون. اما کمی عصبی هستم.", trans: "hālam khub ast, mamnun. ammā kami asabi hastam" },
+                    { speaker: "Sygeplejerske", dk: "Det er helt naturligt at være nervøs.", fa: "این کاملا طبیعی است که عصبی باشید.", trans: "in kāmelan tabi'i ast ke asabi bāshid" },
+                    { speaker: "Patient", dk: "Det er godt at høre.", fa: "خوب است که بشنوم.", trans: "khub ast ke beshunavam" },
+                    { speaker: "Sygeplejerske", dk: "Jeg skal tage dine vitale tegn nu.", fa: "من الان علائم حیاتی شما را می‌سنجم.", trans: "man alān alā'em-e hayāti-ye shomā rā misanjam" },
+                    { speaker: "Patient", dk: "Hvad er vitale tegn?", fa: "علائم حیاتی چیست؟", trans: "alā'em-e hayāti chist?" },
+                    { speaker: "Sygeplejerske", dk: "Det er blodtryk, puls og temperatur.", fa: "این شامل فشار خون، نبض و دما است.", trans: "in shāmel-e feshār-e khun, nabz va damā ast" },
+                    { speaker: "Patient", dk: "Okay, det er fint.", fa: "باشه، خوب است.", trans: "bāshe, khub ast" }
+                ],
+                vocabulary: [
+                    { word: "sygeplejerske", fa: "پرستار", trans: "parastār" },
+                    { word: "afdelingen", fa: "بخش", trans: "bakhsh" },
+                    { word: "nervøs", fa: "عصبی", trans: "asabi" },
+                    { word: "vitale tegn", fa: "علائم حیاتی", trans: "alā'em-e hayāti" },
+                    { word: "blodtryk", fa: "فشار خون", trans: "feshār-e khun" },
+                    { word: "puls", fa: "نبض", trans: "nabz" }
+                ],
+                grammar: "Præsentation: 'Mit navn er...' og 'Jeg er...'",
+                culture: "I Danmark præsenterer sygeplejersker sig med fornavn."
+            },
+            {
+                id: "B002",
+                title: "Måling af blodtryk",
+                titleFa: "اندازه‌گیری فشار خون",
+                duration: "~2 min",
+                dialogue: [
+                    { speaker: "Sygeplejerske", dk: "Nu skal jeg måle dit blodtryk.", fa: "حالا من فشار خون شما را می‌سنجم.", trans: "hālā man feshār-e khun-e shomā rā misanjam" },
+                    { speaker: "Patient", dk: "Okay.", fa: "باشه.", trans: "bāshe" },
+                    { speaker: "Sygeplejerske", dk: "Hvilken arm vil du helst bruge? Venstre eller højre?", fa: "کدام دست را ترجیح می‌دهید؟ چپ یا راست؟", trans: "kodām dast rā tarjih midahid? chap yā rāst?" },
+                    { speaker: "Patient", dk: "Jeg ved ikke. Er der en forskel?", fa: "نمی‌دانم. فرقی هست؟", trans: "nemidānam. farqi hast?" },
+                    { speaker: "Sygeplejerske", dk: "Ikke rigtig. Men vi bruger typisk den venstre arm.", fa: "نه واقعا. اما ما معمولا از دست چپ استفاده می‌کنیم.", trans: "na vāqe'an. ammā mā ma'mulan az dast-e chap estefāde mikonim" },
+                    { speaker: "Patient", dk: "Okay, brug den venstre.", fa: "باشه، از چپ استفاده کنید.", trans: "bāshe, az chap estefāde konid" },
+                    { speaker: "Sygeplejerske", dk: "Perfekt. Læg din arm helt afslappet på bordet.", fa: "عالی. دستتان را کاملا شل روی میز بگذارید.", trans: "āli. dastetān rā kāmelan shol ru-ye miz bogzārid" },
+                    { speaker: "Patient", dk: "Sådan her?", fa: "اینطوری؟", trans: "intouri?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, det er godt. Du vil mærke et lille tryk nu.", fa: "بله، خوب است. الان فشار کمی احساس می‌کنید.", trans: "bale, khub ast. alān feshār-e kami ehsās mikonid" },
+                    { speaker: "Patient", dk: "Okay, jeg er klar.", fa: "باشه، آماده‌ام.", trans: "bāshe, āmāde-am" },
+                    { speaker: "Sygeplejerske", dk: "Færdig! Dit blodtryk er 120 over 80.", fa: "تمام شد! فشار خون شما ۱۲۰ به ۸۰ است.", trans: "tamām shod! feshār-e khun-e shomā 120 be 80 ast" },
+                    { speaker: "Patient", dk: "Er det godt?", fa: "خوب است؟", trans: "khub ast?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, det er helt normalt. Det er fint.", fa: "بله، کاملا طبیعی است. خوب است.", trans: "bale, kāmelan tabi'i ast. khub ast" }
+                ],
+                vocabulary: [
+                    { word: "blodtryk", fa: "فشار خون", trans: "feshār-e khun" },
+                    { word: "venstre", fa: "چپ", trans: "chap" },
+                    { word: "højre", fa: "راست", trans: "rāst" },
+                    { word: "arm", fa: "دست", trans: "dast" },
+                    { word: "afslappet", fa: "شل، آرام", trans: "shol, ārām" }
+                ],
+                grammar: "'Skal jeg...?' bruges til at foreslå en handling.",
+                culture: "Sygeplejersker forklarer altid procedurer før de udfører dem."
+            },
+            {
+                id: "B003",
+                title: "Spørgsmål om smerter",
+                titleFa: "سوال در مورد درد",
+                duration: "~2.5 min",
+                dialogue: [
+                    { speaker: "Sygeplejerske", dk: "Har du ondt nogle steder?", fa: "آیا جایی از بدنتان درد می‌کند؟", trans: "āyā jāyi az badanetān dard mikone?" },
+                    { speaker: "Patient", dk: "Ja, jeg har ondt i maven.", fa: "بله، شکمم درد می‌کند.", trans: "bale, shekam-am dard mikone" },
+                    { speaker: "Sygeplejerske", dk: "Okay. Hvor længe har du haft ondt?", fa: "باشه. چقدر است که دارد درد می‌کند؟", trans: "bāshe. cheqadr ast ke dārad dard mikone?" },
+                    { speaker: "Patient", dk: "Siden i går aftes.", fa: "از دیشب.", trans: "az dishab" },
+                    { speaker: "Sygeplejerske", dk: "Hvor meget har du ondt på en skala fra 1 til 10?", fa: "از ۱ تا ۱۰، چقدر درد دارید؟", trans: "az 1 tā 10, cheqadr dard dārid?" },
+                    { speaker: "Patient", dk: "Måske omkring 6 eller 7.", fa: "شاید حدود ۶ یا ۷.", trans: "shāyad hodud-e 6 yā 7" },
+                    { speaker: "Sygeplejerske", dk: "Det er ret meget. Er det en skarp smerte eller en dov smerte?", fa: "این خیلی زیاد است. درد تیز است یا کُند؟", trans: "in kheyli ziyād ast. dard-e tiz ast yā kond?" },
+                    { speaker: "Patient", dk: "Det er mere en dov smerte.", fa: "بیشتر درد کُند است.", trans: "bishtar dard-e kond ast" },
+                    { speaker: "Sygeplejerske", dk: "Bliver det værre når du bevæger dig?", fa: "وقتی حرکت می‌کنید بدتر می‌شود؟", trans: "vaqti harakat mikonid badtar mishavad?" },
+                    { speaker: "Patient", dk: "Ja, især når jeg går.", fa: "بله، خصوصا وقتی راه می‌روم.", trans: "bale, khususan vaqti rāh miravam" },
+                    { speaker: "Sygeplejerske", dk: "Okay, jeg noterer det. Jeg kommer tilbage med noget smertestillende.", fa: "باشه، یادداشت می‌کنم. با مسکن برمی‌گردم.", trans: "bāshe, yāddāsht mikonam. bā mosaken barmigardām" },
+                    { speaker: "Patient", dk: "Tak skal du have.", fa: "ممنون از شما.", trans: "mamnun az shomā" }
+                ],
+                vocabulary: [
+                    { word: "ondt", fa: "درد", trans: "dard" },
+                    { word: "maven", fa: "شکم", trans: "shekam" },
+                    { word: "skala", fa: "مقیاس", trans: "meqyās" },
+                    { word: "skarp smerte", fa: "درد تیز", trans: "dard-e tiz" },
+                    { word: "dov smerte", fa: "درد کُند", trans: "dard-e kond" },
+                    { word: "smertestillende", fa: "مسکن", trans: "mosaken" }
+                ],
+                grammar: "'Har du ondt?' bruges til at spørge om smerte.",
+                culture: "Smerteskala 1-10 er standard i Danmark."
+            },
+            {
+                id: "B004",
+                title: "Hjælp til toilettet",
+                titleFa: "کمک برای دستشویی",
+                duration: "~2 min",
+                dialogue: [
+                    { speaker: "Patient", dk: "Undskyld mig.", fa: "ببخشید.", trans: "bebakhshid" },
+                    { speaker: "Sygeplejerske", dk: "Ja? Hvad kan jeg hjælpe med?", fa: "بله؟ با چه چیزی می‌توانم کمک کنم؟", trans: "bale? bā che chizi mitavānam komak konam?" },
+                    { speaker: "Patient", dk: "Jeg skal på toilettet.", fa: "من باید به دستشویی بروم.", trans: "man bāyad be dastshui beravam" },
+                    { speaker: "Sygeplejerske", dk: "Okay. Har du brug for hjælp til at gå derhen?", fa: "باشه. برای رفتن به آنجا به کمک نیاز دارید؟", trans: "bāshe. barāye raftan be ānjā be komak niāz dārid?" },
+                    { speaker: "Patient", dk: "Ja tak, jeg kan ikke gå alene.", fa: "بله لطفا، من نمی‌توانم تنها راه بروم.", trans: "bale lotfan, man nemitavānam tanhā rāh beravam" },
+                    { speaker: "Sygeplejerske", dk: "Selvfølgelig. Jeg hjælper dig. Tag fat i min arm.", fa: "البته. من کمکتان می‌کنم. دست من را بگیرید.", trans: "albatte. man komeketān mikonam. dast-e man rā begirid" },
+                    { speaker: "Patient", dk: "Sådan her?", fa: "اینطوری؟", trans: "intouri?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, perfekt. Vi går langsomt.", fa: "بله، عالی. آرام می‌رویم.", trans: "bale, āli. ārām miravim" },
+                    { speaker: "Patient", dk: "Tak for hjælpen.", fa: "ممنون برای کمک.", trans: "mamnun barāye komak" },
+                    { speaker: "Sygeplejerske", dk: "Det er jeg her for. Ring på når du er klar til at komme tilbage.", fa: "برای همین اینجا هستم. وقتی آماده برگشتن شدید زنگ بزنید.", trans: "barāye hamin injā hastam. vaqti āmāde-ye bargashtan shodid zang bezanid" },
+                    { speaker: "Patient", dk: "Det gør jeg. Tak.", fa: "حتما. ممنون.", trans: "hatman. mamnun" }
+                ],
+                vocabulary: [
+                    { word: "toilettet", fa: "دستشویی", trans: "dastshui" },
+                    { word: "hjælp", fa: "کمک", trans: "komak" },
+                    { word: "alene", fa: "تنها", trans: "tanhā" },
+                    { word: "langsomt", fa: "آرام، کند", trans: "ārām, kond" },
+                    { word: "ring på", fa: "زنگ زدن", trans: "zang zadan" }
+                ],
+                grammar: "'Har du brug for...?' = be...niāz dārid?",
+                culture: "Det er helt normalt at bede om hjælp i Danmark."
+            },
+            {
+                id: "B005",
+                title: "Medicinering",
+                titleFa: "دارو دادن",
+                duration: "~2.5 min",
+                dialogue: [
+                    { speaker: "Sygeplejerske", dk: "Godmorgen! Det er tid til din medicin.", fa: "صبح بخیر! وقت دارو شماست.", trans: "sobh bekheyr! vaqt-e dāru-ye shomāst" },
+                    { speaker: "Patient", dk: "Okay. Hvad skal jeg tage?", fa: "باشه. چه داروهایی باید بخورم؟", trans: "bāshe. che dāruhāyi bāyad bekhoram?" },
+                    { speaker: "Sygeplejerske", dk: "Du skal tage to tabletter.", fa: "شما باید دو قرص بخورید.", trans: "shomā bāyad do qors bekhorid" },
+                    { speaker: "Patient", dk: "Hvad er de til?", fa: "برای چه هستند؟", trans: "barāye che hastand?" },
+                    { speaker: "Sygeplejerske", dk: "Den ene er mod smerte. Den anden er antibiotika.", fa: "یکی ضد درد است. دیگری آنتی‌بیوتیک است.", trans: "yeki zed-e dard ast. digari ānti-biutik ast" },
+                    { speaker: "Patient", dk: "Skal jeg tage dem begge nu?", fa: "باید هر دوتا را الان بخورم؟", trans: "bāyad har dotā rā alān bekhoram?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, tag dem begge sammen med vand.", fa: "بله، هر دو را با آب بخورید.", trans: "bale, har do rā bā āb bekhorid" },
+                    { speaker: "Patient", dk: "Skal jeg tage dem før eller efter mad?", fa: "باید قبل یا بعد از غذا بخورم؟", trans: "bāyad qabl yā ba'd az ghazā bekhoram?" },
+                    { speaker: "Sygeplejerske", dk: "Det er bedst at tage dem med mad.", fa: "بهتر است با غذا بخورید.", trans: "behtar ast bā ghazā bekhorid" },
+                    { speaker: "Patient", dk: "Men jeg har ikke spist morgenmad endnu.", fa: "اما من هنوز صبحانه نخورده‌ام.", trans: "ammā man hanuz sobhāne nakhorde-am" },
+                    { speaker: "Sygeplejerske", dk: "Så venter vi til efter morgenmad. Jeg kommer tilbage om 30 minutter.", fa: "پس بعد از صبحانه صبر می‌کنیم. من ۳۰ دقیقه دیگر برمی‌گردم.", trans: "pas ba'd az sobhāne sabr mikonim. man 30 daqiqe digar barmigardām" },
+                    { speaker: "Patient", dk: "Perfekt, tak!", fa: "عالی، ممنون!", trans: "āli, mamnun!" }
+                ],
+                vocabulary: [
+                    { word: "medicin", fa: "دارو", trans: "dāru" },
+                    { word: "tabletter", fa: "قرص", trans: "qors" },
+                    { word: "smerte", fa: "درد", trans: "dard" },
+                    { word: "antibiotika", fa: "آنتی‌بیوتیک", trans: "ānti-biutik" },
+                    { word: "mad", fa: "غذا", trans: "ghazā" },
+                    { word: "morgenmad", fa: "صبحانه", trans: "sobhāne" }
+                ],
+                grammar: "Modal verber: 'skal' (bāyad - must).",
+                culture: "Patienter får altid detaljeret information om medicin."
+            },
+            {
+                id: "B006",
+                title: "Måling af temperatur",
+                titleFa: "اندازه‌گیری دما",
+                duration: "~1.5 min",
+                dialogue: [
+                    { speaker: "Sygeplejerske", dk: "Jeg skal måle din temperatur nu.", fa: "من الان دمای شما را اندازه می‌گیرم.", trans: "man alān damā-ye shomā rā andāze migiram" },
+                    { speaker: "Patient", dk: "Okay. Hvordan gør vi det?", fa: "باشه. چطور انجام می‌دهیم؟", trans: "bāshe. chetor anjām midahim?" },
+                    { speaker: "Sygeplejerske", dk: "Jeg bruger et termometer i din mund. Åbn munden, tak.", fa: "من از دماسنج دهانی استفاده می‌کنم. دهانتان را باز کنید لطفا.", trans: "man az darmāsanj-e dahāni estefāde mikonam. dahānetān rā bāz konid lotfan" },
+                    { speaker: "Patient", dk: "Sådan?", fa: "اینطوری؟", trans: "intouri?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, perfekt. Hold termometeret under tungen.", fa: "بله، عالی. دماسنج را زیر زبان نگه دارید.", trans: "bale, āli. darmāsanj rā zir-e zabān negah dārid" },
+                    { speaker: "Patient", dk: "Mmm.", fa: "ممم.", trans: "mmm" },
+                    { speaker: "Sygeplejerske", dk: "Det tager kun 30 sekunder. Prøv at holde munden lukket.", fa: "فقط ۳۰ ثانیه طول می‌کشد. سعی کنید دهانتان را بسته نگه دارید.", trans: "faqat 30 sāniye tul mikeshad" },
+                    { speaker: "Patient", dk: "Okay.", fa: "باشه.", trans: "bāshe" },
+                    { speaker: "Sygeplejerske", dk: "Færdig! Du kan tage det ud nu.", fa: "تمام شد! الان می‌توانید بیرونش بیاورید.", trans: "tamām shod! alān mitavānid birunash biāvarid" },
+                    { speaker: "Patient", dk: "Hvad er min temperatur?", fa: "دمای من چقدر است؟", trans: "damā-ye man cheqadr ast?" },
+                    { speaker: "Sygeplejerske", dk: "37,2 grader. Det er helt normalt.", fa: "۳۷.۲ درجه. کاملا طبیعی است.", trans: "37.2 daraje. kāmelan tabi'i ast" },
+                    { speaker: "Patient", dk: "Godt at høre!", fa: "خوب است که بشنوم!", trans: "khub ast ke beshunavam!" }
+                ],
+                vocabulary: [
+                    { word: "temperatur", fa: "دما", trans: "damā" },
+                    { word: "termometer", fa: "دماسنج", trans: "darmāsanj" },
+                    { word: "munden", fa: "دهان", trans: "dahān" },
+                    { word: "tungen", fa: "زبان", trans: "zabān" },
+                    { word: "grader", fa: "درجه", trans: "daraje" }
+                ],
+                grammar: "Imperativ: 'Åbn munden', 'Hold...'",
+                culture: "Normal kropstemperatur er 37°C i Danmark."
+            },
+            {
+                id: "B007",
+                title: "Ny kollega",
+                titleFa: "همکار جدید",
+                duration: "~2 min",
+                dialogue: [
+                    { speaker: "Anne", dk: "Hej! Du må være den nye!", fa: "سلام! شما باید جدید باشید!", trans: "salām! shomā bāyad jadid bāshid!" },
+                    { speaker: "Sara", dk: "Hej! Ja, det er min første dag.", fa: "سلام! بله، اولین روز من است.", trans: "salām! bale, avalin ruz-e man ast" },
+                    { speaker: "Anne", dk: "Velkommen til afdelingen! Jeg hedder Anne.", fa: "خوش آمدید به بخش! من آنه هستم.", trans: "khosh āmadid be bakhsh! man Anne hastam" },
+                    { speaker: "Sara", dk: "Tak! Jeg hedder Sara. Dejligt at møde dig.", fa: "ممنون! من سارا هستم. از ملاقات شما خوشحالم.", trans: "mamnun! man Sara hastam" },
+                    { speaker: "Anne", dk: "Er det første gang du arbejder på et hospital?", fa: "اولین باری است که در بیمارستان کار می‌کنید؟", trans: "avalin bāri ast ke dar bimārestān kār mikonid?" },
+                    { speaker: "Sara", dk: "Nej, jeg har arbejdet i Iran før. Men først gang i Danmark.", fa: "نه، من قبلا در ایران کار کرده‌ام. اما اولین بار در دانمارک است.", trans: "na, man qablan dar Irān kār karde-am" },
+                    { speaker: "Anne", dk: "Fedt! Hvis du har brug for hjælp, så sig til!", fa: "عالی! اگر به کمک نیاز داشتید، بگویید!", trans: "āli! agar be komak niāz dāshtid, beguyid!" },
+                    { speaker: "Sara", dk: "Det er rigtig sødt. Hvor er personalerummet?", fa: "خیلی مهربانید. اتاق کارکنان کجاست؟", trans: "kheyli mehrabānid. otāq-e kārkanan kojāst?" },
+                    { speaker: "Anne", dk: "Kom, jeg viser dig rundt. Vi har også kaffe!", fa: "بیا، دور بخش را نشانت می‌دهم. ما قهوه هم داریم!", trans: "biyā, dowr-e bakhsh rā neshānet midaham" },
+                    { speaker: "Sara", dk: "Perfekt! Jeg trænger til en kop kaffe.", fa: "عالی! من به یک فنجان قهوه نیاز دارم.", trans: "āli! man be yek fenjān-e qahve niāz dāram" }
+                ],
+                vocabulary: [
+                    { word: "kollega", fa: "همکار", trans: "hamkār" },
+                    { word: "ny", fa: "جدید", trans: "jadid" },
+                    { word: "første dag", fa: "اولین روز", trans: "avalin ruz" },
+                    { word: "personalerummet", fa: "اتاق کارکنان", trans: "otāq-e kārkanan" },
+                    { word: "kaffe", fa: "قهوه", trans: "qahve" }
+                ],
+                grammar: "Uformelt 'du' mellem kollegaer.",
+                culture: "Danske arbejdspladser er meget uformelle."
+            },
+            {
+                id: "B008",
+                title: "Information til pårørende",
+                titleFa: "اطلاعات به بستگان",
+                duration: "~2 min",
+                dialogue: [
+                    { speaker: "Pårørende", dk: "Undskyld, kan jeg tale med dig?", fa: "ببخشید، می‌توانم با شما صحبت کنم؟", trans: "bebakhshid, mitavānam bā shomā sohbat konam?" },
+                    { speaker: "Sygeplejerske", dk: "Selvfølgelig. Hvad kan jeg hjælpe med?", fa: "البته. با چه چیزی می‌توانم کمک کنم؟", trans: "albatte. bā che chizi mitavānam komak konam?" },
+                    { speaker: "Pårørende", dk: "Hvordan har min mor det i dag?", fa: "امروز مادرم چطور است؟", trans: "emruz mādar-am chetor ast?" },
+                    { speaker: "Sygeplejerske", dk: "Hun har det bedre i dag end i går.", fa: "او امروز حالش بهتر از دیروز است.", trans: "u emruz hālash behtar az diruz ast" },
+                    { speaker: "Pårørende", dk: "Det er dejligt at høre! Har hun spist?", fa: "چه خوب که بشنوم! او غذا خورده؟", trans: "che khub ke beshunavam! u ghazā khorde?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, hun spiste hele sin morgenmad. Hun havde god appetit.", fa: "بله، او تمام صبحانه‌اش را خورد. اشتهای خوبی داشت.", trans: "bale, u tamām-e sobhāne-ash rā khord" },
+                    { speaker: "Pårørende", dk: "Og hvordan sov hun?", fa: "و چطور خوابید؟", trans: "va chetor khābid?" },
+                    { speaker: "Sygeplejerske", dk: "Hun sov roligt hele natten. Ingen problemer.", fa: "او تمام شب آرام خوابید. هیچ مشکلی نبود.", trans: "u tamām-e shab ārām khābid" },
+                    { speaker: "Pårørende", dk: "Må jeg gå ind og se hende nu?", fa: "الان می‌توانم داخل بروم و او را ببینم؟", trans: "alān mitavānam dākhel beravam va u rā bebinam?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, selvfølgelig. Hun ligger i stue 12. Hun er vågen.", fa: "بله، البته. او در اتاق ۱۲ است. بیدار است.", trans: "bale, albatte. u dar otāq-e 12 ast" },
+                    { speaker: "Pårørende", dk: "Tak for informationen!", fa: "ممنون از اطلاعات!", trans: "mamnun az ettelā'āt!" }
+                ],
+                vocabulary: [
+                    { word: "pårørende", fa: "بستگان", trans: "bastegān" },
+                    { word: "bedre", fa: "بهتر", trans: "behtar" },
+                    { word: "morgenmad", fa: "صبحانه", trans: "sobhāne" },
+                    { word: "appetit", fa: "اشتها", trans: "eshte hā" },
+                    { word: "stue", fa: "اتاق", trans: "otāq" }
+                ],
+                grammar: "Fortid: 'spiste' (khord), 'sov' (khābid).",
+                culture: "Pårørende har ret til information om patientens tilstand."
+            },
+            {
+                id: "B009",
+                title: "Personlig hygiejne",
+                titleFa: "بهداشت شخصی",
+                duration: "~2 min",
+                dialogue: [
+                    { speaker: "Sygeplejerske", dk: "Godmorgen! Hvordan har du sovet?", fa: "صبح بخیر! چطور خوابیدید؟", trans: "sobh bekheyr! chetor khābidid?" },
+                    { speaker: "Patient", dk: "Okay, tak.", fa: "خوب، ممنون.", trans: "khub, mamnun" },
+                    { speaker: "Sygeplejerske", dk: "Godt! Skal vi hjælpe dig med morgenvask?", fa: "خوبه! می‌خواهید با شستن صبحگاهی کمکتان کنیم؟", trans: "khube! mikhāhid bā shostan-e sobhgāhi komeketān konim?" },
+                    { speaker: "Patient", dk: "Ja tak. Jeg kan ikke selv i dag.", fa: "بله لطفا. امروز خودم نمی‌توانم.", trans: "bale lotfan. emruz khodam nemitavānam" },
+                    { speaker: "Sygeplejerske", dk: "Selvfølgelig. Vil du vaske dig i sengen eller i badeværelset?", fa: "البته. می‌خواهید در تخت یا در حمام بشویید؟", trans: "albatte. mikhāhid dar takht yā dar hammām beshuyid?" },
+                    { speaker: "Patient", dk: "Kan jeg komme op i badeværelset?", fa: "می‌توانم به حمام بروم؟", trans: "mitavānam be hammām beravam?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, med hjælp. Vi kan bruge kørestolen.", fa: "بله، با کمک. می‌توانیم از ویلچر استفاده کنیم.", trans: "bale, bā komak. mitavānim az vilcher estefāde konim" },
+                    { speaker: "Patient", dk: "Det lyder godt.", fa: "خوب به نظر می‌رسد.", trans: "khub be nazar miresad" },
+                    { speaker: "Sygeplejerske", dk: "Perfekt. Jeg henter kørestolen og kommer tilbage.", fa: "عالی. من ویلچر را می‌آورم و برمی‌گردم.", trans: "āli. man vilcher rā miāvaram va barmigardām" },
+                    { speaker: "Patient", dk: "Tak skal du have.", fa: "ممنون از شما.", trans: "mamnun az shomā" }
+                ],
+                vocabulary: [
+                    { word: "morgenvask", fa: "شستن صبحگاهی", trans: "shostan-e sobhgāhi" },
+                    { word: "sengen", fa: "تخت", trans: "takht" },
+                    { word: "badeværelset", fa: "حمام", trans: "hammām" },
+                    { word: "kørestol", fa: "ویلچر", trans: "vilcher" }
+                ],
+                grammar: "'Skal vi...?' bruges til at foreslå fælles handling.",
+                culture: "Personlig hygiejne er en vigtig del af plejen."
+            },
+            {
+                id: "B010",
+                title: "Besøgstider",
+                titleFa: "ساعات ملاقات",
+                duration: "~1.5 min",
+                dialogue: [
+                    { speaker: "Pårørende", dk: "Undskyld, hvornår kan jeg besøge min far?", fa: "ببخشید، کی می‌توانم پدرم را ملاقات کنم؟", trans: "bebakhshid, key mitavānam pedaram rā molāqāt konam?" },
+                    { speaker: "Sygeplejerske", dk: "Besøgstiden er fra klokken 14 til 20.", fa: "ساعت ملاقات از ساعت ۱۴ تا ۲۰ است.", trans: "sā'at-e molāqāt az sā'at-e 14 tā 20 ast" },
+                    { speaker: "Pårørende", dk: "Alle dage?", fa: "همه روزها؟", trans: "hame ruzha?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, hver dag. Også i weekenden.", fa: "بله، هر روز. حتی آخر هفته.", trans: "bale, har ruz. hattā ākhar-e hafte" },
+                    { speaker: "Pårørende", dk: "Kan flere personer besøge ham samtidig?", fa: "چند نفر می‌توانند همزمان او را ملاقات کنند؟", trans: "chand nafar mitavānand hamzamān u rā molāqāt konand?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, men maksimalt to personer ad gangen.", fa: "بله، اما حداکثر دو نفر یکجا.", trans: "bale, ammā haddeaksar do nafar yekjā" },
+                    { speaker: "Pårørende", dk: "Okay, det er fint. Kan børn også besøge?", fa: "باشه، خوبه. بچه‌ها هم می‌توانند ملاقات کنند؟", trans: "bāshe, khube. bachche-hā ham mitavānand molāqāt konand?" },
+                    { speaker: "Sygeplejerske", dk: "Ja, børn er velkommen. Men de skal være rolige.", fa: "بله، بچه‌ها خوش آمدید هستند. اما باید آرام باشند.", trans: "bale, bachche-hā khosh āmadid hastand" },
+                    { speaker: "Pårørende", dk: "Selvfølgelig. Tak for informationen!", fa: "البته. ممنون از اطلاعات!", trans: "albatte. mamnun az ettelā'āt!" }
+                ],
+                vocabulary: [
+                    { speaker: "besøgstid", fa: "ساعت ملاقات", trans: "sā'at-e molāqāt" },
+                    { word: "klokken", fa: "ساعت", trans: "sā'at" },
+                    { word: "samtidig", fa: "همزمان", trans: "hamzamān" },
+                    { word: "maksimalt", fa: "حداکثر", trans: "haddeaksar" },
+                    { word: "børn", fa: "بچه‌ها", trans: "bachche-hā" }
+                ],
+                grammar: "Tid med 'fra...til' (az...tā).",
+                culture: "De fleste danske hospitaler har faste besøgstider."
+            }
+        ];
+
+        function playAudio(scenarioId, lineIndex, button) {
+            const audioPath = `audio/${scenarioId}_${String(lineIndex + 1).padStart(2, '0')}.mp3`;
+            const audio = new Audio(audioPath);
+            
+            button.textContent = '⏸ Afspiller...';
+            button.classList.add('playing');
+            
+            audio.play().catch(err => {
+                button.textContent = '❌ Ingen lyd';
+                setTimeout(() => {
+                    button.textContent = '▶ Afspil';
+                    button.classList.remove('playing');
+                }, 2000);
+            });
+            
+            audio.onended = () => {
+                button.textContent = '▶ Afspil';
+                button.classList.remove('playing');
+            };
+        }
+
+        function renderCards() {
+            document.getElementById('scenarios').innerHTML = scenarios.map((s, i) => `
+                <div class="card" onclick="openModal(${i})">
+                    <div class="card-id">${s.id}</div>
+                    <div class="card-title">${s.title}</div>
+                    <div class="card-title-fa farsi">${s.titleFa}</div>
+                    <div class="card-duration">⏱ ${s.duration} • ${s.dialogue.length} sætninger</div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(index) {
+            const s = scenarios[index];
+            document.getElementById('modalTitle').textContent = s.title;
+            document.getElementById('modalTitleFa').textContent = s.titleFa;
+
+            const dialogueHTML = s.dialogue.map((d, i) => `
+                <div class="dialogue-turn">
+                    <div class="speaker">
+                        <span>${d.speaker}</span>
+                        <button class="play-btn" onclick="event.stopPropagation(); playAudio('${s.id}', ${i}, this)">▶ Afspil</button>
+                    </div>
+                    <div class="text-dk">${d.dk}</div>
+                    <div class="text-fa farsi">${d.fa}</div>
+                    <div class="text-transliteration">${d.trans}</div>
+                </div>
+            `).join('');
+
+            const vocabHTML = s.vocabulary.map(v => `
+                <div class="vocab-item">
+                    <div class="vocab-word">${v.word}</div>
+                    <div class="vocab-meaning-fa farsi">${v.fa}</div>
+                    <div class="text-transliteration">${v.trans}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('modalBody').innerHTML = `
+                <h3 class="section-title">Samtale / گفتگو</h3>
+                ${dialogueHTML}
+                <h3 class="section-title">Vigtige Ord / واژگان</h3>
+                <div class="vocab-grid">${vocabHTML}</div>
+                <div class="note-box">
+                    <h4>📝 Grammatik</h4>
+                    <p>${s.grammar}</p>
+                </div>
+                <div class="note-box" style="background: #FFF3E0; border-color: #F57C00;">
+                    <h4>🌍 Kultur</h4>
+                    <p>${s.culture}</p>
+                </div>
+            `;
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        renderCards();
+    </script>
+</body>
+</html>
